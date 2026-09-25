@@ -1,0 +1,628 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev Decision Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5F7; --surface:#FFFFFF; --surface-2:#EEF2F5; --ink:#17202A; --muted:#5A6672; --line:#D9DFE5; --track:#E4E9EE;
+  --accent:#0E6F6A; --accent-soft:#DCEEEC;
+  --allow:#1F7A47; --allow-soft:#E0F2E7; --confirm:#946010; --confirm-soft:#F8EDD6; --block:#B0322A; --block-soft:#F8E1DE;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1216; --surface:#151B21; --surface-2:#1B232B; --ink:#E3E8ED; --muted:#95A2AE; --line:#2A343E; --track:#26303A;
+    --accent:#4DB6AC; --accent-soft:#16332F;
+    --allow:#5CC98A; --allow-soft:#15301F; --confirm:#E3AE55; --confirm-soft:#352916; --block:#F0827A; --block-soft:#3B1D1B;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1216; --surface:#151B21; --surface-2:#1B232B; --ink:#E3E8ED; --muted:#95A2AE; --line:#2A343E; --track:#26303A;
+  --accent:#4DB6AC; --accent-soft:#16332F;
+  --allow:#5CC98A; --allow-soft:#15301F; --confirm:#E3AE55; --confirm-soft:#352916; --block:#F0827A; --block-soft:#3B1D1B;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:20px;padding-block:32px 64px;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.2}
+p{margin:0}
+code,.mono{font-family:var(--mono);font-size:.88em}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+header{display:flex;flex-direction:column;gap:14px}
+h1{font-size:clamp(28px,4vw,38px);font-weight:700;letter-spacing:-.01em}
+.lede{max-width:68ch;color:var(--muted);font-size:16px}
+.pipe{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.pipe li{padding:14px 16px 14px 16px;position:relative;display:flex;flex-direction:column;gap:4px}
+.pipe li + li{border-left:1px solid var(--line)}
+.pipe li + li::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:var(--surface);border-top:1px solid var(--line);border-right:1px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.pipe b{font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.pipe li:nth-child(2) b{color:var(--accent)}
+.pipe span{font-size:13.5px;color:var(--muted)}
+.note{font-size:13.5px;color:var(--confirm);background:var(--confirm-soft);border-radius:8px;padding:10px 14px;max-width:100%}
+.note code{color:inherit}
+.principles{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13.5px;color:var(--muted)}
+.principles b{color:var(--ink);font-weight:600}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{appearance:none;border:0;background:none;font:inherit;font-weight:600;color:var(--muted);padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tab small{font-weight:400;color:var(--muted);margin-left:6px}
+
+.panel{display:grid;grid-template-columns:290px minmax(0,1fr);gap:24px;align-items:start}
+.side{display:flex;flex-direction:column;gap:18px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.side h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.samples{display:flex;flex-direction:column;gap:6px}
+.sample{appearance:none;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.sample:hover{border-color:var(--muted)}
+.sample[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.sample .top{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px}
+.sample .top b{font-family:var(--mono);font-weight:500}
+.sample .snip{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.custom{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+.custom label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted);font-weight:500}
+.custom textarea,.custom select,.custom input{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+.custom textarea{min-height:92px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{appearance:none;font:inherit;font-weight:600;font-size:14px;border:0;border-radius:6px;padding:9px 12px;background:var(--accent);color:var(--surface);cursor:pointer}
+.btn.ghost{background:none;color:var(--accent);border:1px solid var(--line);padding:6px 10px;font-size:13px}
+
+.flow{display:flex;flex-direction:column;gap:18px;min-width:0}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.stage-h{display:flex;gap:12px;align-items:flex-start}
+.num{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:var(--accent-soft);color:var(--accent)}
+.stage-h h3{font-size:18px;font-weight:600}
+.stage-h p{font-size:13.5px;color:var(--muted);margin-top:2px}
+.run .stage{animation:rise .45s ease-out backwards}
+.run .stage:nth-child(2){animation-delay:.12s}
+.run .stage:nth-child(3){animation-delay:.24s}
+@keyframes rise{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.run .stage{animation:none}}
+
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;font-size:14px;margin:0}
+.kv dt{font-family:var(--mono);font-size:13px;color:var(--accent);padding-top:1px}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.sub{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.qs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.qs li{display:grid;grid-template-columns:minmax(120px,170px) 64px minmax(0,1fr);gap:12px;padding:8px 12px;font-size:14px;align-items:baseline}
+.qs li + li{border-top:1px solid var(--line)}
+.qs .id{font-family:var(--mono);font-size:13px;overflow-wrap:anywhere}
+.qs .ins code{background:var(--surface-2);padding:0 4px;border-radius:3px}
+.chip{display:inline-block;font-family:var(--mono);font-size:11.5px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line);white-space:nowrap;justify-self:start}
+.callout{font-size:13.5px;color:var(--muted)}
+.callout b{color:var(--ink);font-weight:600}
+details{border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+summary{cursor:pointer;padding:8px 12px;font-size:13.5px;font-weight:500}
+pre{margin:0;padding:12px;max-height:320px;overflow:auto;font-family:var(--mono);font-size:12.5px;line-height:1.5;border-top:1px solid var(--line);white-space:pre}
+
+.answers{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.ans{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.ans-h{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.ans-h .id{font-family:var(--mono);font-size:13px;font-weight:500}
+.ans .q{font-size:12.5px;color:var(--muted)}
+.big{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.big .of{font-size:15px;color:var(--muted);font-weight:500}
+.big .unit{font-size:12.5px;color:var(--muted);font-weight:400}
+.bar{position:relative;height:8px;border-radius:4px;background:var(--track)}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--accent)}
+.tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);transform:translateX(-1px)}
+.tickcap{font-size:12px;color:var(--muted)}
+.tickcap b{color:var(--ink);font-weight:600}
+.dist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.dist li{display:grid;grid-template-columns:86px minmax(0,1fr) 38px;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.dist li .v{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px}
+.dist li .k{font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dist li .fill{background:var(--muted);opacity:.45}
+.dist li.win{color:var(--ink)}
+.dist li.win .fill{background:var(--accent);opacity:1}
+.dist.levels li{grid-template-columns:18px minmax(0,1fr) 38px;row-gap:3px}
+.dist.levels .legend{grid-column:2;grid-row:1;font-size:12px;line-height:1.35}
+.dist.levels .k{grid-row:1 / span 2}
+.dist.levels .bar{grid-column:2;grid-row:2;height:6px}
+.dist.levels .v{grid-row:1 / span 2}
+
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{font-size:13.5px;background:var(--surface-2);border-radius:6px;padding:6px 10px}
+.fact b{font-weight:600}
+.trace{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.trace li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);align-items:start}
+.trace .st{font-size:12px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding-top:2px}
+.trace .lbl{font-weight:500;font-size:14px}
+.trace .det{font-size:13px;color:var(--muted);font-family:var(--mono);overflow-wrap:anywhere}
+.trace li.miss .st{color:var(--muted)}
+.trace li.skip{opacity:.5;border-style:dashed}
+.trace li.skip .st{color:var(--muted)}
+.trace li.hit{border-color:var(--tone);background:var(--tone-soft)}
+.trace li.hit .st{color:var(--tone)}
+.trace li.flag{border-color:var(--confirm);background:var(--confirm-soft)}
+.trace li.flag .st{color:var(--confirm)}
+.t-allow{--tone:var(--allow);--tone-soft:var(--allow-soft)}
+.t-confirm{--tone:var(--confirm);--tone-soft:var(--confirm-soft)}
+.t-block{--tone:var(--block);--tone-soft:var(--block-soft)}
+.t-accent{--tone:var(--accent);--tone-soft:var(--accent-soft)}
+.outcome{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:16px;border-radius:10px;background:var(--tone-soft);border:1px solid var(--tone)}
+.outcome .res{font-size:22px;font-weight:700;color:var(--tone)}
+.outcome .why{font-size:14px;color:var(--ink)}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.03em;padding:2px 8px;border-radius:999px;color:var(--tone);background:var(--tone-soft);border:1px solid var(--tone);white-space:nowrap}
+.knobs-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.knobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 18px}
+.knob{display:flex;flex-direction:column;gap:2px;font-size:13px}
+.knob .kt{display:flex;justify-content:space-between;gap:8px}
+.knob output{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--accent);font-weight:500}
+.knob input{width:100%;accent-color:var(--accent)}
+.knob small{color:var(--muted);font-size:12px}
+
+@media (max-width: 900px){
+  .panel{grid-template-columns:1fr}
+  .side{position:static}
+  .samples{flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .sample{min-width:220px}
+}
+@media (max-width: 640px){
+  .pipe{grid-template-columns:1fr 1fr}
+  .pipe li:nth-child(3){border-left:0;border-top:1px solid var(--line)}
+  .pipe li:nth-child(4){border-top:1px solid var(--line)}
+  .pipe li:nth-child(3)::before{display:none}
+  .qs li{grid-template-columns:1fr auto;}
+  .qs .ins{grid-column:1 / -1}
+  .trace li{grid-template-columns:1fr}
+  .stage{padding:16px}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">TypeSafe AI · Jev · CMS support desk demo</p>
+    <h1>How Jev makes the call</h1>
+    <p class="lede">Jev doesn't write text. You send it some state and a set of typed questions, and it sends back probabilities. Your own code compares those numbers to thresholds and picks the action. Pick a sample on the left and follow the three steps.</p>
+    <ol class="pipe" aria-label="Pipeline">
+      <li><b>Input</b><span>A support ticket, or a tool call your AI agent wants to run</span></li>
+      <li><b>Jev</b><span>Answers typed questions with probabilities. No generated text.</span></li>
+      <li><b>Your code</b><span>Checks each answer against thresholds you control</span></li>
+      <li><b>Action</b><span>Route the ticket, or allow, confirm or block the tool call</span></li>
+    </ol>
+    <div class="principles">
+      <span><b>One call.</b> All questions run in parallel on the same state.</span>
+      <span><b>Judgment to Jev, facts in code.</b> Counting and math stay in code.</span>
+      <span><b>Confidence gates.</b> Low confidence goes to a human.</span>
+    </div>
+    <p class="note">This page uses the repo's offline mock (<code>src/mock.js</code>): keyword rules that return answers in Jev's exact response shape. Real Jev reads meaning, so judge accuracy with a live key and <code>npm run demo</code>. The decision rules and thresholds are the real ones from <code>src/triage.js</code>, <code>src/gate.js</code> and <code>src/questions.js</code>.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-triage" data-mode="triage" aria-selected="true">Support ticket triage<small>6 questions</small></button>
+    <button class="tab" role="tab" id="tab-gate" data-mode="gate" aria-selected="false">Agent tool-call gate<small>3 questions</small></button>
+  </div>
+
+  <section class="panel">
+    <aside class="side">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h2 id="samples-h">Sample tickets</h2>
+        <div class="samples" id="samples"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h2>Try your own</h2>
+        <form class="custom" id="custom"></form>
+      </div>
+    </aside>
+
+    <div class="flow" id="flow">
+      <section class="stage">
+        <div class="stage-h"><span class="num">1</span><div><h3>What your code sends to Jev</h3><p>One POST to <code>api.typesafe.ai/v1/systemone</code> with the state and every question.</p></div></div>
+        <div id="s1" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+      <section class="stage">
+        <div class="stage-h"><span class="num">2</span><div><h3>What Jev sends back</h3><p>One typed answer per question. The black tick on a bar is the threshold your code checks.</p></div></div>
+        <div id="s2" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+      <section class="stage">
+        <div class="stage-h"><span class="num">3</span><div><h3>What your code decides</h3><p>Rules run top to bottom. The first one that fires wins.</p></div></div>
+        <div id="s3" style="display:flex;flex-direction:column;gap:14px"></div>
+        <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px">
+          <div class="knobs-h"><span class="sub">Thresholds. Move one to see the decision change.</span><button class="btn ghost" type="button" id="reset">Reset to repo values</button></div>
+          <div class="knobs" id="knobs"></div>
+        </div>
+      </section>
+    </div>
+  </section>
+</div>
+
+<script>
+// ───────── questions & thresholds (copied from src/questions.js) ─────────
+const TRIAGE_Q = {
+  category: { type:'choice', instructions:'What is the customer asking about in `message`?', criteria:{
+    publishing:'Entries or assets not publishing, delivery API or CDN serving old content, publish webhooks',
+    branches:'Creating, merging or comparing branches, aliases, merge conflicts',
+    migration:'Moving content from another CMS, bulk import or export of entries',
+    access:'Logins, SSO, roles, permissions, API tokens',
+    billing:'Invoices, charges, plan limits, refunds, renewals',
+    other:'Anything that does not fit the options above' } },
+  urgency: { type:'score', instructions:'How urgent is the situation described in `message`?', criteria:[
+    'A question or request with no deadline and nothing broken',
+    'Something is broken but there is a workaround, or nothing live is affected',
+    'Live content or a whole team is affected, or there is a deadline within days',
+    'Production is down or the customer is losing money right now or within hours' ] },
+  frustration: { type:'score', instructions:'How frustrated is the author of `message`?', criteria:[
+    'Calm, just stating facts or asking a question',
+    'Frustrated but civil',
+    'Very angry, repeated follow-ups, or threatening to leave' ] },
+  production_impact: { type:'noul', instructions:'Does `message` say that live or production content, or end users, are affected?', criteria:{
+    true:'The live site, production environment, or real end users are affected',
+    false:'Only staging, drafts, internal setup, or nothing broken' } },
+  refund_requested: { type:'noul', instructions:'Does `message` ask for money back?' },
+  asks_how_to: { type:'noul', instructions:'Is `message` only asking how to do something, with nothing broken?' },
+}
+const GATE_Q = {
+  reversibility: { type:'choice', instructions:'What kind of operation is `action`?', criteria:{
+    read_only:'Only reads or lists data; changes nothing',
+    reversible:'Changes data but can be undone, e.g. unpublish, update a field, publish a version',
+    irreversible:'Deletes or purges data, or cannot be undone' } },
+  touches_production: { type:'noul', instructions:'Does `action.args.environment` refer to a production or live environment?' },
+  matches_intent: { type:'noul', instructions:'Does `action` do what `user_request` asked for, with the same scope and no more?' },
+}
+const DEFAULT_T = { minCategoryConfidence:0.5, autoAnswerConfidence:0.7, productionNoul:0.8, pageOnCallUrgency:2.3, angryFrustration:1.5, refundNoul:0.7, howToNoul:0.8 }
+const DEFAULT_G = { minIntentMatch:0.6, readOnlyConfidence:0.8, reversibleConfidence:0.7, productionNoul:0.5, bulkItemCount:20 }
+let T = { ...DEFAULT_T }, G = { ...DEFAULT_G }
+
+const KNOBS = {
+  triage: [
+    ['minCategoryConfidence','Min category confidence',0,1,.01,'Below this, a human reads the ticket'],
+    ['productionNoul','Production impact',0,1,.01,'Counts as live at or above this'],
+    ['pageOnCallUrgency','Page on-call urgency',0,3,.05,'Score 0–3. Enterprise gets 0.3 lower'],
+    ['refundNoul','Refund requested',0,1,.01,'Billing refund route at or above this'],
+    ['howToNoul','How-to question',0,1,.01,'LLM drafts a reply at or above this'],
+    ['autoAnswerConfidence','Auto-answer confidence',0,1,.01,'Category confidence needed for the LLM route'],
+    ['angryFrustration','Escalation frustration',0,2,.05,'Score 0–2. Flags the account manager'],
+  ],
+  gate: [
+    ['minIntentMatch','Min intent match',0,1,.01,'Below this, the action is blocked'],
+    ['productionNoul','Production',0,1,.01,'Counts as production at or above this'],
+    ['readOnlyConfidence','Read-only confidence',0,1,.01,'Needed to allow a read without asking'],
+    ['reversibleConfidence','Reversible confidence',0,1,.01,'Needed to allow a reversible change'],
+    ['bulkItemCount','Bulk item count',1,50,1,'Counted in code, never by Jev'],
+  ],
+}
+
+// ───────── fixtures (copied from src/fixtures.js) ─────────
+const TICKETS = [
+  { id:'T-101', customer:'Acme Retail', plan:'enterprise', message:"Our homepage banner was published 2 hours ago but the live site still shows the old one. Customers see last week's sale prices. We are losing orders right now, please fix ASAP." },
+  { id:'T-102', customer:'Northwind Media', plan:'growth', message:'How do I compare two branches before merging? Is there a way to see only the entries that changed?' },
+  { id:'T-103', customer:'Globex', plan:'enterprise', message:'We were charged twice for the September invoice. Please refund the duplicate charge.' },
+  { id:'T-104', customer:'Initech', plan:'growth', message:'This is the third time I am writing about this. The WordPress import still fails at 40% and nobody replies. Unacceptable. We will switch vendor if this is not sorted this week!!' },
+  { id:'T-105', customer:'Umbrella Labs', plan:'starter', message:'Hey, quick one: does your team offer workshops for our marketing folks?' },
+]
+const ACTIONS = [
+  { user_request:'Show me all entries in the blog content type that are still in draft.', action:{ tool:'list_entries', args:{ content_type:'blog', status:'draft', environment:'production' } } },
+  { user_request:'Publish the updated pricing page to staging so marketing can review it.', action:{ tool:'publish_entry', args:{ uid:'blt_pricing', environment:'staging' } } },
+  { user_request:'Publish the updated pricing page to staging so marketing can review it.', action:{ tool:'publish_entry', args:{ uid:'blt_pricing', environment:'production' } } },
+  { user_request:'Unpublish the old campaign pages from production.', action:{ tool:'unpublish_entries', args:{ uids:Array.from({length:35},(_,i)=>`blt_campaign_${i}`), environment:'production' } } },
+  { user_request:'Find the duplicate author entries.', action:{ tool:'delete_entries', args:{ uids:['blt_author_7','blt_author_9'], environment:'production' } } },
+]
+
+// ───────── mock Jev (ported from src/mock.js) ─────────
+const text = (v) => JSON.stringify(v).toLowerCase()
+const has = (s, words) => words.some((w) => s.includes(w))
+function normalize(w){ const t = Object.values(w).reduce((a,b)=>a+b,0); return Object.fromEntries(Object.entries(w).map(([k,v])=>[k,+(v/t).toFixed(3)])) }
+function confidence(probs){ const p = Object.values(probs).filter(x=>x>0); const h = -p.reduce((a,x)=>a+x*Math.log(x),0); return +(1 - h/Math.log(Object.keys(probs).length)).toFixed(2) }
+function choiceAnswer(w){ const probabilities = normalize(w); const choice = Object.entries(probabilities).sort((a,b)=>b[1]-a[1])[0][0]; return { type:'choice', choice, probabilities, confidence:confidence(probabilities) } }
+function scoreAnswer(levels, w){ const probabilities = normalize(Object.fromEntries(w.map((x,i)=>[String(i),x]))); const score = +Object.entries(probabilities).reduce((a,[i,p])=>a+Number(i)*p,0).toFixed(2); const legend = Object.fromEntries(levels.map((l,i)=>[String(i),l])); return { type:'score', score, legend, probabilities, confidence:confidence(probabilities) } }
+const noul = (p) => ({ type:'noul', noul:p })
+const RULES = {
+  category: (s) => choiceAnswer({
+    publishing: has(s,['publish','cdn','delivery','stale','old content','webhook']) ? 30 : 0.2,
+    branches: has(s,['branch','merge','alias']) ? 30 : 0.2,
+    migration: has(s,['migrat','import','wordpress','aem','sitecore']) ? 30 : 0.2,
+    access: has(s,['sso','login','permission','role','token']) ? 30 : 0.2,
+    billing: has(s,['invoice','charged','refund','billing','renewal']) ? 30 : 0.2,
+    other: 0.6 }),
+  urgency: (s,q) => {
+    if (has(s,['down','losing','launch tomorrow','asap','right now'])) return scoreAnswer(q.criteria,[0.01,0.04,0.2,0.75])
+    if (has(s,['live','production','customers see','whole team'])) return scoreAnswer(q.criteria,[0.02,0.18,0.65,0.15])
+    if (has(s,['broken','fails','error','charged twice'])) return scoreAnswer(q.criteria,[0.05,0.6,0.3,0.05])
+    return scoreAnswer(q.criteria,[0.8,0.15,0.04,0.01]) },
+  frustration: (s,q) => {
+    if (has(s,['unacceptable','third time','cancel','switch vendor','!!'])) return scoreAnswer(q.criteria,[0.02,0.18,0.8])
+    if (has(s,['still','again','frustrat','asap'])) return scoreAnswer(q.criteria,[0.1,0.75,0.15])
+    return scoreAnswer(q.criteria,[0.85,0.13,0.02]) },
+  production_impact: (s) => noul(has(s,['live','production','customers see','end users']) ? 0.95 : 0.08),
+  refund_requested: (s) => noul(has(s,['refund','money back','credit back']) ? 0.94 : 0.02),
+  asks_how_to: (s) => noul(has(s,['how do i','how can i','is there a way']) && !has(s,['broken','error','fails']) ? 0.91 : 0.07),
+  reversibility: (s) => choiceAnswer({
+    read_only: has(s,['"get_','"list_','"search_']) ? 30 : 0.2,
+    reversible: has(s,['"publish','"unpublish','"update_']) ? 30 : 0.2,
+    irreversible: has(s,['"delete','"purge','"drop']) ? 30 : 0.2 }),
+  touches_production: (s) => noul(has(s,['"production"','"prod"','"live"']) ? 0.97 : 0.05),
+  matches_intent: (s) => {
+    const req = s.split('"action"')[0]
+    if (has(s,['"delete','"purge']) && !has(req,['delete','remove','clean up'])) return noul(0.12)
+    if (has(s,['"publish']) && has(req,['staging']) && has(s,['"production"'])) return noul(0.2)
+    return noul(0.9) },
+}
+function mockAnswers(state, questions){ const s = text(state); return Object.fromEntries(Object.entries(questions).map(([id,q])=>[id, RULES[id](s,q)])) }
+
+// ───────── decisions (same order and logic as src/triage.js and src/gate.js) ─────────
+const QUEUES = { publishing:'platform-support', branches:'platform-support', migration:'solutions-team', access:'identity-support', billing:'billing' }
+const ROUTE_LABEL = { 'on-call':'Page on-call', 'llm-answer':'LLM drafts a reply', billing:'Billing team', 'platform-support':'Platform support', 'solutions-team':'Solutions team', 'identity-support':'Identity support', 'human-review':'Human review' }
+const f2 = (v) => (+v).toFixed(2)
+const cmp = (a,b) => a >= b ? '≥' : '<'
+
+function runner(){
+  const steps = []; let outcome = null
+  return {
+    rule(label, fires, detail, out){
+      if (outcome) { steps.push({ label, detail, state:'skip' }); return }
+      if (fires) { outcome = typeof out === 'function' ? out() : out; steps.push({ label, detail, state:'hit', outcome }) }
+      else steps.push({ label, detail, state:'miss' })
+    },
+    steps, get outcome(){ return outcome },
+  }
+}
+
+function decideTriage(a, ticket){
+  const { category, urgency, frustration, production_impact:prod, refund_requested:refund, asks_how_to:howto } = a
+  const r = runner()
+  const live = prod.noul >= T.productionNoul
+  const enterprise = ticket.plan === 'enterprise'
+  const bar = enterprise ? T.pageOnCallUrgency - 0.3 : T.pageOnCallUrgency
+  r.rule('Category too unclear → a human reads it', category.confidence < T.minCategoryConfidence,
+    `category.confidence ${f2(category.confidence)} ${cmp(category.confidence,T.minCategoryConfidence)} ${f2(T.minCategoryConfidence)}`,
+    { route:'human-review', priority:'normal', why:`category unclear (confidence ${category.confidence})` })
+  r.rule('Live and very urgent → page on-call', live && urgency.score >= bar,
+    `production ${f2(prod.noul)} ${cmp(prod.noul,T.productionNoul)} ${f2(T.productionNoul)} · urgency ${f2(urgency.score)} ${cmp(urgency.score,bar)} ${f2(bar)}${enterprise ? ' (enterprise bar is 0.3 lower)' : ''}`,
+    { route:'on-call', priority:'P1', why:`production impact ${prod.noul}, urgency ${urgency.score}/3` })
+  r.rule('Billing and refund asked → billing team', category.choice === 'billing' && refund.noul >= T.refundNoul,
+    `category = ${category.choice} · refund ${f2(refund.noul)} ${cmp(refund.noul,T.refundNoul)} ${f2(T.refundNoul)}`,
+    { route:'billing', priority:'P2', why:`refund requested (${refund.noul})`, flag:'refund' })
+  r.rule('Pure how-to question → LLM drafts a reply from the docs', howto.noul >= T.howToNoul && category.confidence >= T.autoAnswerConfidence,
+    `how-to ${f2(howto.noul)} ${cmp(howto.noul,T.howToNoul)} ${f2(T.howToNoul)} · category.confidence ${f2(category.confidence)} ${cmp(category.confidence,T.autoAnswerConfidence)} ${f2(T.autoAnswerConfidence)}`,
+    { route:'llm-answer', priority:'P4', why:`how-to question about ${category.choice}` })
+  const route = category.choice === 'other' ? 'human-review' : QUEUES[category.choice]
+  const priority = urgency.score >= 1.5 ? 'P2' : 'P3'
+  const reached = !r.outcome
+  r.rule('Otherwise → the team queue for this category', true,
+    `${category.choice} → ${route} · urgency ${f2(urgency.score)} ${cmp(urgency.score,1.5)} 1.50 → ${priority}`,
+    { route, priority, why:`${category.choice}, urgency ${urgency.score}/3` })
+  const angry = frustration.score >= T.angryFrustration
+  const flagStep = { label:'Very frustrated → flag for the account manager', detail:`frustration ${f2(frustration.score)} ${cmp(frustration.score,T.angryFrustration)} ${f2(T.angryFrustration)}`, state: !reached ? 'skip' : angry ? 'flag' : 'miss' }
+  r.steps.push(flagStep)
+  const d = { ...r.outcome }
+  if (reached && angry) d.flag = 'escalate-to-account-manager'
+  return { decision:d, steps:r.steps }
+}
+
+function decideGate(a, action){
+  const { reversibility:rev, touches_production:prod, matches_intent:intent } = a
+  const itemCount = action.args?.uids?.length ?? 1
+  const bulk = itemCount >= G.bulkItemCount
+  const onProd = prod.noul >= G.productionNoul
+  const r = runner()
+  r.rule('Drifted from what the user asked → block', intent.noul < G.minIntentMatch,
+    `matches_intent ${f2(intent.noul)} ${cmp(intent.noul,G.minIntentMatch)} ${f2(G.minIntentMatch)}`,
+    { result:'BLOCK', why:`does not match what the user asked (${intent.noul})` })
+  r.rule('Irreversible → a human must say yes', rev.choice === 'irreversible',
+    `reversibility = ${rev.choice}`,
+    { result:'CONFIRM', why:`irreversible${bulk ? `, ${itemCount} items` : ''}, needs a human yes` })
+  r.rule('Read-only and sure → allow', rev.choice === 'read_only' && rev.confidence >= G.readOnlyConfidence,
+    `reversibility = ${rev.choice} · confidence ${f2(rev.confidence)} ${cmp(rev.confidence,G.readOnlyConfidence)} ${f2(G.readOnlyConfidence)}`,
+    { result:'ALLOW', why:'read-only' })
+  r.rule('Reversible and sure → allow, but confirm a bulk change on production', rev.choice === 'reversible' && rev.confidence >= G.reversibleConfidence,
+    `reversibility = ${rev.choice} · confidence ${f2(rev.confidence)} ${cmp(rev.confidence,G.reversibleConfidence)} ${f2(G.reversibleConfidence)} · production ${f2(prod.noul)} ${cmp(prod.noul,G.productionNoul)} ${f2(G.productionNoul)} · bulk ${bulk ? 'yes' : 'no'}`,
+    () => onProd && bulk ? { result:'CONFIRM', why:`bulk change (${itemCount}) on production` } : { result:'ALLOW', why:'reversible' + (onProd ? ', production' : '') })
+  r.rule('Unsure what this does → confirm', true,
+    `reversibility confidence ${f2(rev.confidence)}`,
+    { result:'CONFIRM', why:`unsure what this does (confidence ${rev.confidence})` })
+  return { decision:r.outcome, steps:r.steps, itemCount, bulk }
+}
+
+// ───────── state ─────────
+let mode = 'triage'
+let current = null      // { kind:'sample'|'custom', index, item }
+const $ = (s) => document.querySelector(s)
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]))
+const inlineCode = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>')
+
+function evaluate(item){
+  if (mode === 'triage'){
+    const state = { message:item.message, plan:item.plan, customer:item.customer }
+    const answers = mockAnswers(state, TRIAGE_Q)
+    return { state, answers, ...decideTriage(answers, item) }
+  }
+  const state = { user_request:item.user_request, action:item.action }
+  const answers = mockAnswers(state, GATE_Q)
+  return { state, answers, ...decideGate(answers, item.action) }
+}
+
+function toneOf(d){
+  if (mode === 'gate') return d.result === 'ALLOW' ? 't-allow' : d.result === 'BLOCK' ? 't-block' : 't-confirm'
+  return d.priority === 'P1' ? 't-block' : d.route === 'human-review' ? 't-confirm' : 't-accent'
+}
+const pillText = (d) => mode === 'gate' ? d.result : `${d.route} · ${d.priority}`
+
+// ───────── rendering ─────────
+function bar(p, tick){
+  const t = tick == null ? '' : `<span class="tick" style="left:${Math.max(0,Math.min(1,tick))*100}%" title="threshold"></span>`
+  return `<div class="bar"><span class="fill" style="width:${Math.max(0,Math.min(1,p))*100}%"></span>${t}</div>`
+}
+
+function tickFor(id, item){
+  if (mode === 'triage'){
+    if (id === 'production_impact') return [T.productionNoul, 'on-call needs ≥']
+    if (id === 'refund_requested') return [T.refundNoul, 'billing refund needs ≥']
+    if (id === 'asks_how_to') return [T.howToNoul, 'LLM reply needs ≥']
+    if (id === 'urgency') return [item.plan === 'enterprise' ? T.pageOnCallUrgency - 0.3 : T.pageOnCallUrgency, `on-call needs ≥`]
+    if (id === 'frustration') return [T.angryFrustration, 'escalation at ≥']
+    if (id === 'category') return [T.minCategoryConfidence, 'confidence must be ≥']
+  } else {
+    if (id === 'touches_production') return [G.productionNoul, 'production at ≥']
+    if (id === 'matches_intent') return [G.minIntentMatch, 'blocked below']
+    if (id === 'reversibility') return [null, '']
+  }
+  return [null, '']
+}
+
+function answerCard(id, q, a, item){
+  const [tick, tickLabel] = tickFor(id, item)
+  let body = ''
+  if (a.type === 'noul'){
+    body = `<div class="big">${f2(a.noul)}<span class="unit">probability of yes</span></div>${bar(a.noul, tick)}` +
+      (tick != null ? `<div class="tickcap">Code: ${tickLabel} <b>${f2(tick)}</b></div>` : '')
+  } else if (a.type === 'choice'){
+    const rows = Object.entries(a.probabilities).sort((x,y) => y[1]-x[1])
+    body = `<div class="big">${esc(a.choice)}<span class="unit">confidence ${f2(a.confidence)}</span></div>` +
+      `<ul class="dist">${rows.map(([k,p]) => `<li class="${k===a.choice?'win':''}"><span class="k" title="${esc(k)}">${esc(k)}</span>${bar(p)}<span class="v">${f2(p)}</span></li>`).join('')}</ul>` +
+      (tick != null ? `<div class="tickcap">Code: ${tickLabel} <b>${f2(tick)}</b>, otherwise a human reads it</div>` : '')
+  } else {
+    const levels = Object.entries(a.probabilities)
+    const max = levels.length - 1
+    const top = levels.slice().sort((x,y) => y[1]-x[1])[0][0]
+    body = `<div class="big">${f2(a.score)}<span class="of">/ ${max}</span><span class="unit">expected level · confidence ${f2(a.confidence)}</span></div>` +
+      bar(a.score/max, tick != null ? tick/max : null) +
+      (tick != null ? `<div class="tickcap">Code: ${tickLabel} <b>${f2(tick)}</b></div>` : '') +
+      `<ul class="dist levels">${levels.map(([i,p]) => `<li class="${i===top?'win':''}"><span class="k">${i}</span><span class="legend">${esc(a.legend[i])}</span>${bar(p)}<span class="v">${f2(p)}</span></li>`).join('')}</ul>`
+  }
+  return `<article class="ans"><div class="ans-h"><span class="id">${esc(id)}</span><span class="chip">${a.type}</span></div><p class="q">${inlineCode(q.instructions)}</p>${body}</article>`
+}
+
+function renderS1(ev, item){
+  const qs = mode === 'triage' ? TRIAGE_Q : GATE_Q
+  let stateRows
+  if (mode === 'triage'){
+    stateRows = `<dt>message</dt><dd>${esc(item.message)}</dd><dt>plan</dt><dd>${esc(item.plan)}</dd><dt>customer</dt><dd>${esc(item.customer)}</dd>`
+  } else {
+    const { uids, ...rest } = item.action.args
+    const args = Object.entries(rest).map(([k,v]) => `${k}: ${esc(v)}`).join(', ') + (uids ? `, uids: [${uids.length} ids]` : '')
+    stateRows = `<dt>user_request</dt><dd>${esc(item.user_request)}</dd><dt>action</dt><dd class="mono">${esc(item.action.tool)}(${args})</dd>`
+  }
+  const body = { model:'jev-latest', state:ev.state, questions:qs }
+  $('#s1').innerHTML = `
+    <span class="sub">State</span>
+    <dl class="kv">${stateRows}</dl>
+    <span class="sub">Questions · ${Object.keys(qs).length} in one call</span>
+    <ul class="qs">${Object.entries(qs).map(([id,q]) => `<li><span class="id">${esc(id)}</span><span class="chip">${q.type}</span><span class="ins">${inlineCode(q.instructions)}</span></li>`).join('')}</ul>
+    <p class="callout">${mode === 'triage'
+      ? '<b>Some questions only matter for some tickets.</b> They all go in anyway. They run in parallel, so extra questions cost almost no time, and code ignores what it doesn’t need.'
+      : '<b>The agent proposes, Jev judges.</b> The LLM agent picked this tool call. Before it runs, Jev compares it with what the user asked for.'}</p>
+    <details><summary>Request body (JSON)</summary><pre>${esc(JSON.stringify(body, null, 2))}</pre></details>`
+}
+
+function renderS2(ev, item){
+  const qs = mode === 'triage' ? TRIAGE_Q : GATE_Q
+  $('#s2').innerHTML = `
+    <div class="answers">${Object.entries(ev.answers).map(([id,a]) => answerCard(id, qs[id], a, item)).join('')}</div>
+    <p class="callout"><b>Three answer types.</b> <code>noul</code> is the probability of yes, from 0 to 1. <code>choice</code> is the top option plus the full distribution and a confidence. <code>score</code> is the expected level on an ordered scale you define.</p>
+    <details><summary>Raw answers (JSON)</summary><pre>${esc(JSON.stringify(ev.answers, null, 2))}</pre></details>`
+}
+
+function renderS3(ev){
+  const d = ev.decision
+  const tone = toneOf(d)
+  const facts = mode === 'gate'
+    ? `<div class="facts"><span class="fact">Counted in code, not by Jev: <b>${ev.itemCount} item${ev.itemCount===1?'':'s'}</b> → ${ev.bulk ? `bulk (≥ ${G.bulkItemCount})` : `not bulk (< ${G.bulkItemCount})`}</span></div>` : ''
+  const stLabel = { hit:'Fires', miss:'Passes', skip:'Not reached', flag:'Flag' }
+  const steps = ev.steps.map((s) => `<li class="${s.state} ${s.state==='hit'?tone:''}"><span class="st">${stLabel[s.state]}</span><div><div class="lbl">${esc(s.label)}</div><div class="det">${esc(s.detail)}</div></div></li>`).join('')
+  const res = mode === 'gate' ? d.result : ROUTE_LABEL[d.route] || d.route
+  const extra = mode === 'triage' ? `<span class="pill ${tone}">${esc(d.priority)}</span>` : ''
+  const flag = d.flag ? `<span class="pill t-confirm">⚑ ${esc(d.flag)}</span>` : ''
+  $('#s3').innerHTML = `${facts}<ol class="trace">${steps}</ol>
+    <div class="outcome ${tone}"><span class="res">${esc(res)}</span>${extra}${flag}<span class="why">${esc(d.why)}</span></div>`
+}
+
+function renderSamples(){
+  const list = mode === 'triage' ? TICKETS : ACTIONS
+  $('#samples-h').textContent = mode === 'triage' ? 'Sample tickets' : 'Sample agent actions'
+  $('#samples').innerHTML = list.map((item, i) => {
+    const d = evaluate(item).decision
+    const pressed = current?.kind === 'sample' && current.index === i
+    if (mode === 'triage') return `<button class="sample" type="button" data-i="${i}" aria-pressed="${pressed}"><span class="top"><b>${item.id}</b><span class="pill ${toneOf(d)}">${esc(pillText(d))}</span></span><span class="snip">${esc(item.customer)} · ${esc(item.message)}</span></button>`
+    const n = item.action.args.uids?.length
+    return `<button class="sample" type="button" data-i="${i}" aria-pressed="${pressed}"><span class="top"><b>${esc(item.action.tool)}</b><span class="pill ${toneOf(d)}">${d.result}</span></span><span class="snip">${esc(item.action.args.environment)}${n ? ` · ${n} items` : ''} · “${esc(item.user_request)}”</span></button>`
+  }).join('')
+}
+
+function renderCustomForm(){
+  const f = $('#custom')
+  if (mode === 'triage'){
+    f.innerHTML = `
+      <label for="c-msg">Ticket message<textarea id="c-msg">Our SSO login stopped working for the whole editorial team this morning and we cannot publish anything before tonight's launch.</textarea></label>
+      <div class="row2">
+        <label for="c-cust">Customer<input id="c-cust" value="Contoso"></label>
+        <label for="c-plan">Plan<select id="c-plan"><option>starter</option><option selected>growth</option><option>enterprise</option></select></label>
+      </div>
+      <button class="btn" type="submit">Run through Jev</button>`
+  } else {
+    const tools = ['list_entries','get_entry','search_entries','publish_entry','update_entry','unpublish_entries','delete_entries','purge_assets']
+    f.innerHTML = `
+      <label for="c-req">What the user asked<textarea id="c-req">Update the author bio on the staging About page.</textarea></label>
+      <label for="c-tool">Tool the agent picked<select id="c-tool">${tools.map(t => `<option${t==='update_entry'?' selected':''}>${t}</option>`).join('')}</select></label>
+      <div class="row2">
+        <label for="c-env">Environment<select id="c-env"><option>staging</option><option>production</option><option>development</option></select></label>
+        <label for="c-count">Items<input id="c-count" type="number" min="1" max="500" value="1"></label>
+      </div>
+      <button class="btn" type="submit">Run through Jev</button>`
+  }
+}
+
+function renderKnobs(){
+  const src = mode === 'triage' ? T : G
+  $('#knobs').innerHTML = KNOBS[mode].map(([k,label,min,max,step,help]) => `
+    <label class="knob" for="k-${k}"><span class="kt"><span>${label}</span><output id="o-${k}">${step >= 1 ? src[k] : f2(src[k])}</output></span>
+      <input type="range" id="k-${k}" data-k="${k}" min="${min}" max="${max}" step="${step}" value="${src[k]}"><small>${help}</small></label>`).join('')
+}
+
+function renderFlow(animate){
+  if (!current) return
+  const ev = evaluate(current.item)
+  renderS1(ev, current.item); renderS2(ev, current.item); renderS3(ev)
+  const flow = $('#flow')
+  if (animate){ flow.classList.remove('run'); void flow.offsetWidth; flow.classList.add('run') }
+}
+
+function select(kind, index, item){ current = { kind, index, item }; renderSamples(); renderFlow(true) }
+
+function setMode(m){
+  mode = m
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.mode === m)))
+  renderCustomForm(); renderKnobs()
+  select('sample', 0, (m === 'triage' ? TICKETS : ACTIONS)[0])
+  try { history.replaceState(null, '', '#' + m) } catch {}
+}
+
+// ───────── events ─────────
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)))
+$('#samples').addEventListener('click', (e) => {
+  const b = e.target.closest('.sample'); if (!b) return
+  const i = +b.dataset.i
+  select('sample', i, (mode === 'triage' ? TICKETS : ACTIONS)[i])
+})
+$('#custom').addEventListener('submit', (e) => {
+  e.preventDefault()
+  if (mode === 'triage'){
+    const message = $('#c-msg').value.trim(); if (!message) { $('#c-msg').focus(); return }
+    select('custom', -1, { id:'Custom', customer:$('#c-cust').value.trim() || 'Your customer', plan:$('#c-plan').value, message })
+  } else {
+    const user_request = $('#c-req').value.trim(); if (!user_request) { $('#c-req').focus(); return }
+    const count = Math.max(1, Math.min(500, parseInt($('#c-count').value, 10) || 1))
+    const environment = $('#c-env').value
+    const args = count > 1 ? { uids:Array.from({length:count}, (_,i) => `blt_item_${i}`), environment } : { uid:'blt_item', environment }
+    select('custom', -1, { user_request, action:{ tool:$('#c-tool').value, args } })
+  }
+})
+$('#knobs').addEventListener('input', (e) => {
+  const k = e.target.dataset.k; if (!k) return
+  const src = mode === 'triage' ? T : G
+  src[k] = +e.target.value
+  $('#o-' + k).textContent = e.target.step >= 1 ? src[k] : f2(src[k])
+  renderSamples(); renderFlow(false)
+})
+$('#reset').addEventListener('click', () => {
+  if (mode === 'triage') T = { ...DEFAULT_T }; else G = { ...DEFAULT_G }
+  renderKnobs(); renderSamples(); renderFlow(false)
+})
+
+setMode(location.hash === '#gate' ? 'gate' : 'triage')
+</script>

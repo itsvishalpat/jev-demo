@@ -1,0 +1,12 @@
+{
+  "name": "jev-cms-support-demo",
+  "version": "1.0.0",
+  "description": "Demo: Jev (TypeSafe AI) as the decision layer for a CMS support desk and an AI agent's tool calls",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "demo": "node src/demo.js",
+    "demo:json": "node src/demo.js --json"
+  },
+  "license": "MIT"
+}
