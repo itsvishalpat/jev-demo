@@ -50,7 +50,9 @@ Optional: pin a model version with `JEV_MODEL=jev-1.13.0` (the default is `jev-l
 
 ## Visual walkthrough (UI)
 
-Open `ui/index.html` in any browser (double-click it, or run `open ui/index.html` on macOS). It needs no server and no build step.
+**Live:** https://itsvishalpat.github.io/jev-demo/
+
+To run it locally instead, open `ui/index.html` in any browser (double-click it, or run `open ui/index.html` on macOS). It needs no server and no build step.
 
 The page shows every step for each sample:
 
