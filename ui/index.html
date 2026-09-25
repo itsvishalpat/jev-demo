@@ -48,6 +48,10 @@ h1{font-size:clamp(28px,4vw,38px);font-weight:700;letter-spacing:-.01em}
 .principles{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13.5px;color:var(--muted)}
 .principles b{color:var(--ink);font-weight:600}
 
+.overview{margin:0;display:flex;flex-direction:column;gap:8px}
+.overview a{display:block;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.overview img{display:block;width:100%;height:auto}
+.overview figcaption{font-size:13px;color:var(--muted)}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .tab{appearance:none;border:0;background:none;font:inherit;font-weight:600;color:var(--muted);padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
@@ -193,6 +197,11 @@ pre{margin:0;padding:12px;max-height:320px;overflow:auto;font-family:var(--mono)
     </div>
     <p class="note">This page uses the repo's offline mock (<code>src/mock.js</code>): keyword rules that return answers in Jev's exact response shape. Real Jev reads meaning, so judge accuracy with a live key and <code>npm run demo</code>. The decision rules and thresholds are the real ones from <code>src/triage.js</code>, <code>src/gate.js</code> and <code>src/questions.js</code>.</p>
   </header>
+
+  <figure class="overview">
+    <a href="jev-overview.jpg" target="_blank" rel="noopener"><img src="jev-overview.jpg" width="1536" height="1024" alt="Infographic: Jev by TypeSafe AI. Input (a user request or data) goes to Jev, which evaluates typed questions (noul yes/no, choice, score) and returns typed results with probabilities. Examples: urgent ticket classification, category selection, severity scoring. Shows where Jev fits between an LLM agent and the action, a comparison with traditional LLMs, and use cases such as support ticket routing, content moderation, e-commerce and agent safety checks."></a>
+    <figcaption>Jev at a glance. Tap the image to open it full size. The JSON in the image is illustrative; the real response shape is shown in step 2 below.</figcaption>
+  </figure>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-triage" data-mode="triage" aria-selected="true">Support ticket triage<small>6 questions</small></button>
